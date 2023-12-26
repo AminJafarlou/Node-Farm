@@ -2,6 +2,8 @@ const fs = require("fs");
 const url = require("url");
 const http = require("http");
 
+const replaceTemplate = require("./modules/replaceTemplate");
+
 const tempOverview = fs.readFileSync(
   `${__dirname}/template-overview.html`,
   "utf-8"
@@ -12,21 +14,6 @@ const tempProduct = fs.readFileSync(
 );
 const tempCard = fs.readFileSync(`${__dirname}/template-card.html`, "utf-8");
 
-const templateBuilder = (htmlTemplate, element) => {
-  const output = htmlTemplate
-    .replace(/{%PRODUCT_NAME%}/g, element.productName)
-    .replace(/{%IMAGE%}/g, element.image)
-    .replace(/{%ID%}/g, element.id)
-    .replace(/{%DESCRIPTION%}/g, element.description)
-    .replace(/{%NUTRIENTS%}/g, element.nutrients)
-    .replace(/{%FROM%}/g, element.from)
-    .replace(/{%QUANTITY%}/g, element.quantity)
-    .replace(/{%PRICE%}/g, element.price)
-    .replace(/{%NOT_ORGANIC%}/g, element.organic ? "" : "not-organic");
-
-  return output;
-};
-
 const data = fs.readFileSync(`${__dirname}/data.json`, "utf-8");
 const dataObj = JSON.parse(data);
 
@@ -36,7 +23,7 @@ const server = http.createServer((req, res) => {
   // OVERVIEW PAGE
   if (pathname === "/" || pathname === "/overview") {
     const cardHTML = dataObj
-      .map((el) => templateBuilder(tempCard, el))
+      .map((el) => replaceTemplate(tempCard, el))
       .join("");
     const overviewHTML = tempOverview.replace(/{%PRODUCT_CARDS%}/g, cardHTML);
 
@@ -51,7 +38,7 @@ const server = http.createServer((req, res) => {
     const product = dataObj[query.id];
 
     res.writeHead(200, { "Content-type": "text/html" });
-    res.end(templateBuilder(tempProduct, product));
+    res.end(replaceTemplate(tempProduct, product));
     return;
   }
 
